@@ -1,0 +1,3 @@
+library/.gitignore
+venv
+library/library/__pycache__
