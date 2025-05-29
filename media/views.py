@@ -1,14 +1,14 @@
 import csv
-from django.http import HttpResponse
-from rest_framework import viewsets, permissions, filters
+from django.http import HttpResponse, FileResponse, Http404
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+
 from .models import MediaFile
 from .serializers import MediaFileSerializer
-from django_filters.rest_framework import DjangoFilterBackend
-from django.http import FileResponse, Http404
-
-
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
@@ -17,7 +17,7 @@ class MediaFileViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['file_type', 'category', 'is_processed']
+    filterset_fields = ['file_type', 'category', 'is_processed', 'tags']
     search_fields = ['file']
     ordering_fields = ['uploaded_at']
 
@@ -28,17 +28,15 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             size=file_obj.size,
             extension=file_obj.name.split('.')[-1].lower()
         )
-
-        # Safe trigger for Celery
         try:
             from .tasks import extract_metadata
             extract_metadata.delay(instance.id)
         except Exception as e:
             print("Celery error:", e)
-            # Optional: directly run the task instead
-            from .tasks import extract_metadata
             extract_metadata(instance.id)
 
+    def get_queryset(self):
+        return MediaFile.objects.filter(owner=self.request.user)
 
     @action(detail=False, methods=['get'])
     def export(self, request):
@@ -71,8 +69,8 @@ class MediaFileViewSet(viewsets.ModelViewSet):
                 obj.is_processed
             ])
 
+        return response
 
-    
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         try:
@@ -82,8 +80,11 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             print("Download error:", e)
             raise Http404("File not found.")
 
-    def get_queryset(self):
-        user = self.request.user
-        return MediaFile.objects.filter(owner=user)
-
-        return response
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def public_download(request, pk):
+    media = get_object_or_404(MediaFile, pk=pk, is_public=True)
+    try:
+        return FileResponse(media.file.open('rb'), as_attachment=True)
+    except:
+        raise Http404("File not found.")

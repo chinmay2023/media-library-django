@@ -7,6 +7,12 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class MediaFile(models.Model):
     FILE_TYPES = [
         ('image', 'Image'),
@@ -20,7 +26,10 @@ class MediaFile(models.Model):
     file = models.FileField(upload_to='uploads/')
     file_type = models.CharField(max_length=10, choices=FILE_TYPES)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_public = models.BooleanField(default=False)
 
     size = models.BigIntegerField(null=True, blank=True)
     extension = models.CharField(max_length=10, null=True, blank=True)
@@ -32,11 +41,3 @@ class MediaFile(models.Model):
 
     def __str__(self):
         return self.file.name
-
-#http://127.0.0.1:8000/api/mediafiles/7/
-
-#{
-  #"file_type" : "image",
- # "category_id" : 7
-
-#}

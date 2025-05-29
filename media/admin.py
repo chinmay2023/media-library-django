@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import MediaFile, Category
-
+# media/admin.py
+from .models import Tag, MediaFile, Category
+admin.site.register(Tag)
 admin.site.register(MediaFile)
 admin.site.register(Category)
