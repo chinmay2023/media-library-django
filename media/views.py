@@ -6,7 +6,6 @@ from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-
 from .models import MediaFile
 from .serializers import MediaFileSerializer
 
