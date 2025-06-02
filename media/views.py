@@ -8,6 +8,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from .models import MediaFile
 from .serializers import MediaFileSerializer
+from rest_framework import viewsets
+from .models import Category
+from .serializers import CategorySerializer
+from rest_framework.permissions import IsAuthenticated
+from .models import Tag
+from .serializers import TagSerializer
+from rest_framework import viewsets 
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
@@ -87,3 +94,14 @@ def public_download(request, pk):
         return FileResponse(media.file.open('rb'), as_attachment=True)
     except:
         raise Http404("File not found.")
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticated]
