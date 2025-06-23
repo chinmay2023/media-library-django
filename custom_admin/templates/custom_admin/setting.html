@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary-color: #1E40AF;
+      --font-size: 16px;
+    }
+    body {
+      font-size: var(--font-size);
+      transition: all 0.3s ease;
+    }
+    .dark-mode {
+      background-color: #0f172a;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6 bg-gray-100 text-gray-800 transition-all" id="mainBody">
+
+  <div class="max-w-3xl mx-auto bg-white dark-mode-container rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold mb-6 text-blue-600">Admin Settings</h1>
+
+    <!-- Dark Mode Toggle -->
+    <div class="mb-6">
+      <label class="flex items-center space-x-4">
+        <span class="text-lg">Dark Mode</span>
+        <input type="checkbox" id="darkModeToggle" class="w-5 h-5">
+      </label>
+    </div>
+
+    <!-- Sidebar Toggle -->
+    <div class="mb-6">
+      <label class="flex items-center space-x-4">
+        <span class="text-lg">Sidebar Visible</span>
+        <input type="checkbox" id="sidebarToggle" class="w-5 h-5">
+      </label>
+    </div>
+
+    <!-- Theme Color Picker -->
+    <div class="mb-6">
+      <label class="block text-lg mb-2">Theme Color</label>
+      <input type="color" id="themeColor" value="#1E40AF" class="w-16 h-10 border rounded">
+    </div>
+
+    <!-- Font Size -->
+    <div class="mb-6">
+      <label class="block text-lg mb-2">Font Size</label>
+      <input type="range" id="fontSizeSlider" min="14" max="20" value="16" class="w-full">
+      <p class="text-sm mt-1">Current size: <span id="fontSizeValue">16px</span></p>
+    </div>
+
+    <!-- Reset Button -->
+    <div class="mt-8">
+      <button onclick="resetSettings()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Reset Settings</button>
+    </div>
+  </div>
+
+  <script>
+    const body = document.getElementById("mainBody");
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const themeColor = document.getElementById("themeColor");
+    const fontSizeSlider = document.getElementById("fontSizeSlider");
+    const fontSizeValue = document.getElementById("fontSizeValue");
+
+    // Load saved settings
+    window.onload = function () {
+      const settings = JSON.parse(localStorage.getItem("adminSettings")) || {};
+      if (settings.darkMode) {
+        body.classList.add("dark-mode");
+        darkModeToggle.checked = true;
+      }
+      if (settings.sidebarVisible !== undefined) {
+        sidebarToggle.checked = settings.sidebarVisible;
+      }
+      if (settings.themeColor) {
+        document.documentElement.style.setProperty('--primary-color', settings.themeColor);
+        themeColor.value = settings.themeColor;
+      }
+      if (settings.fontSize) {
+        document.documentElement.style.setProperty('--font-size', settings.fontSize + "px");
+        fontSizeSlider.value = settings.fontSize;
+        fontSizeValue.innerText = settings.fontSize + "px";
+      }
+    };
+
+    function saveSettings() {
+      const settings = {
+        darkMode: darkModeToggle.checked,
+        sidebarVisible: sidebarToggle.checked,
+        themeColor: themeColor.value,
+        fontSize: fontSizeSlider.value
+      };
+      localStorage.setItem("adminSettings", JSON.stringify(settings));
+      applySettings(settings);
+    }
+
+    function applySettings(settings) {
+      if (settings.darkMode) {
+        body.classList.add("dark-mode");
+      } else {
+        body.classList.remove("dark-mode");
+      }
+      document.documentElement.style.setProperty('--primary-color', settings.themeColor);
+      document.documentElement.style.setProperty('--font-size', settings.fontSize + "px");
+      fontSizeValue.innerText = settings.fontSize + "px";
+    }
+
+    // Event listeners
+    darkModeToggle.addEventListener("change", saveSettings);
+    sidebarToggle.addEventListener("change", saveSettings);
+    themeColor.addEventListener("input", saveSettings);
+    fontSizeSlider.addEventListener("input", saveSettings);
+
+    function resetSettings() {
+      localStorage.removeItem("adminSettings");
+      location.reload();
+    }
+  </script>
+
+</body>
+</html>

@@ -6,22 +6,15 @@ from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from .models import MediaFile
-from .serializers import MediaFileSerializer
-from rest_framework import viewsets
-from .models import Category
-from .serializers import CategorySerializer
+from .models import MediaFile, Category, Tag
+from .serializers import MediaFileSerializer, CategorySerializer, TagSerializer
 from rest_framework.permissions import IsAuthenticated
-from .models import Tag
-from .serializers import TagSerializer
-from rest_framework import viewsets 
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [permissions.IsAuthenticated]
-
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['file_type', 'category', 'is_processed', 'tags']
     search_fields = ['file']
@@ -47,17 +40,14 @@ class MediaFileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def export(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="media_files_export.csv"'
-
         writer = csv.writer(response)
         writer.writerow([
             'ID', 'File Name', 'File Type', 'Size (bytes)', 'Extension',
             'Duration (s)', 'Width', 'Height', 'Page Count',
             'Category', 'Uploaded At', 'Owner', 'Processed'
         ])
-
         for obj in queryset:
             writer.writerow([
                 obj.id,
@@ -74,7 +64,6 @@ class MediaFileViewSet(viewsets.ModelViewSet):
                 obj.owner.username,
                 obj.is_processed
             ])
-
         return response
 
     @action(detail=True, methods=['get'])
@@ -100,8 +89,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
-
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]

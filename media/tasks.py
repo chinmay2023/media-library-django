@@ -41,5 +41,7 @@ def extract_metadata(mediafile_id):
         media.is_processed = True
         media.save()
 
+    except MediaFile.DoesNotExist:
+        print(f"[Metadata task error] MediaFile with id {mediafile_id} does not exist.")
     except Exception as e:
         print("[Metadata task error]", e)

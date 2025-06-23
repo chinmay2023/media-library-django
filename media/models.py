@@ -20,6 +20,7 @@ class MediaFile(models.Model):
         ('video', 'Video'),
         ('pdf', 'PDF'),
         ('doc', 'Document'),
+        ('png', 'PNG'),
     ]
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
