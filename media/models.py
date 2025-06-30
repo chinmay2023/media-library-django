@@ -1,5 +1,8 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+import os
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -7,11 +10,13 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
+
 
 class MediaFile(models.Model):
     FILE_TYPES = [
@@ -20,7 +25,6 @@ class MediaFile(models.Model):
         ('video', 'Video'),
         ('pdf', 'PDF'),
         ('doc', 'Document'),
-        ('png', 'PNG'),
     ]
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -41,4 +45,33 @@ class MediaFile(models.Model):
     is_processed = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.file.name
+        return self.file.name if self.file else "No file"
+
+    def clean(self):
+        if self.file:
+            ext = os.path.splitext(self.file.name)[1].lower()
+            extension_map = {
+                '.jpg': 'image',
+                '.jpeg': 'image',
+                '.png': 'image',
+                '.gif': 'image',
+                '.mp3': 'audio',
+                '.wav': 'audio',
+                '.mp4': 'video',
+                '.avi': 'video',
+                '.pdf': 'pdf',
+                '.doc': 'doc',
+                '.docx': 'doc',
+            }
+
+            guessed_type = extension_map.get(ext)
+
+            if not guessed_type:
+                raise ValidationError({
+                    'file': f"Unsupported file extension: '{ext}'"
+                })
+
+            if guessed_type != self.file_type:
+                raise ValidationError({
+                    'file_type': f"File type mismatch: You selected '{self.file_type.upper()}' but uploaded a '{ext}' file."
+                })

@@ -7,9 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from urllib.parse import unquote as urlunquote
 from django.views.decorators.csrf import csrf_protect
-
-from media.models import MediaFile
-
+from media.models import MediaFile, Category, Tag
 
 @csrf_protect
 def custom_login(request):
@@ -34,11 +32,22 @@ def custom_logout(request):
 @login_required
 @csrf_protect
 def custom_admin_dashboard(request):
+    categories = Category.objects.all()
+    tags = Tag.objects.all()
+
     if request.method == 'POST':
-        if request.FILES.get('file'):
-            uploaded_file = request.FILES['file']
-            MediaFile.objects.create(file=uploaded_file, owner=request.user)
-            messages.success(request, 'File uploaded successfully.')
+        uploaded_file = request.FILES.get('file')
+        category_id = request.POST.get('category')
+        tag_id = request.POST.get('tag')
+
+        if uploaded_file and category_id and tag_id:
+            try:
+                category = Category.objects.get(id=category_id)
+                tag = Tag.objects.get(id=tag_id)
+                MediaFile.objects.create(file=uploaded_file, owner=request.user, category=category, tag=tag)
+                messages.success(request, 'File uploaded successfully with category and tag.')
+            except (Category.DoesNotExist, Tag.DoesNotExist):
+                messages.error(request, 'Invalid category or tag selected.')
             return redirect('custom_admin:custom_admin_dashboard')
 
         file_id = request.POST.get('file_id')
@@ -51,7 +60,6 @@ def custom_admin_dashboard(request):
 
     media_files = MediaFile.objects.all()
 
-    # 🔹 Group models by app
     grouped_models = defaultdict(list)
     all_models = apps.get_models()
     for model in all_models:
@@ -60,13 +68,16 @@ def custom_admin_dashboard(request):
         verbose_name = model._meta.verbose_name_plural.title()
         grouped_models[app_label].append({
             'name': verbose_name,
-            'url': f"/{app_label.lower()}/{model_name}/"  # Modify if needed
+            'url': f"/{app_label.lower()}/{model_name}/"
         })
 
     return render(request, 'custom_admin/login.html', {
         'dashboard': True,
         'media_files': media_files,
-        'grouped_models': dict(grouped_models)
+        'categories': categories,
+        'tags': tags,
+        'grouped_models': dict(grouped_models),
+        'active_model': 'media_files'
     })
 
 
@@ -86,3 +97,33 @@ def delete_file(request, filename):
     else:
         messages.error(request, f"File '{decoded_filename}' not found or invalid path.")
     return redirect('custom_admin:custom_admin_dashboard')
+
+
+@login_required
+def media_files_view(request):
+    media_files = MediaFile.objects.all()
+    return render(request, 'custom_admin/login.html', {
+        'dashboard': True,
+        'media_files': media_files,
+        'active_model': 'media_files'
+    })
+
+
+@login_required
+def categories_view(request):
+    categories = Category.objects.all()
+    return render(request, 'custom_admin/login.html', {
+        'dashboard': True,
+        'categories': categories,
+        'active_model': 'categories'
+    })
+
+
+@login_required
+def tags_view(request):
+    tags = Tag.objects.all()
+    return render(request, 'custom_admin/login.html', {
+        'dashboard': True,
+        'tags': tags,
+        'active_model': 'tags'
+    })

@@ -2,15 +2,18 @@ from rest_framework import serializers
 from .models import MediaFile, Tag, Category
 import os
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name']
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
+
 
 class MediaFileSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, required=False)
@@ -29,10 +32,28 @@ class MediaFileSerializer(serializers.ModelSerializer):
         file_type = data.get('file_type')
 
         if file and file_type:
-            ext = os.path.splitext(file.name)[1].lower().strip('.')  # get extension from filename
-            expected_type = file_type.lower().strip()
+            ext = os.path.splitext(file.name)[1].lower().strip('.')
+            extension_map = {
+                'jpg': 'image',
+                'jpeg': 'image',
+                'png': 'image',
+                'gif': 'image',
+                'mp3': 'audio',
+                'wav': 'audio',
+                'mp4': 'video',
+                'avi': 'video',
+                'pdf': 'pdf',
+                'doc': 'doc',
+                'docx': 'doc',
+            }
+            guessed_type = extension_map.get(ext)
 
-            if ext != expected_type:
+            if not guessed_type:
+                raise serializers.ValidationError({
+                    'file': f"Unsupported file extension: .{ext}"
+                })
+
+            if guessed_type != file_type.lower().strip():
                 raise serializers.ValidationError({
                     'file_type': f"File type mismatch: uploaded file has extension '.{ext}', but file_type is '{file_type}'"
                 })

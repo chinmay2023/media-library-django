@@ -10,6 +10,7 @@ from .models import MediaFile, Category, Tag
 from .serializers import MediaFileSerializer, CategorySerializer, TagSerializer
 from rest_framework.permissions import IsAuthenticated
 
+
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
@@ -32,6 +33,7 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             extract_metadata.delay(instance.id)
         except Exception as e:
             print("Celery error:", e)
+            # Fallback: run task synchronously
             extract_metadata(instance.id)
 
     def get_queryset(self):
@@ -75,19 +77,23 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             print("Download error:", e)
             raise Http404("File not found.")
 
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def public_download(request, pk):
     media = get_object_or_404(MediaFile, pk=pk, is_public=True)
     try:
         return FileResponse(media.file.open('rb'), as_attachment=True)
-    except:
+    except Exception as e:
+        print("Public download error:", e)
         raise Http404("File not found.")
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
+
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()

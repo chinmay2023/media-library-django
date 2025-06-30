@@ -41,7 +41,7 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen" id="mainBody">
 
 {% if dashboard %}
-<!-- Dashboard -->
+<!-- Admin Panel -->
 <div class="flex h-screen">
 
   <!-- Sidebar -->
@@ -50,14 +50,12 @@
     <nav class="flex flex-col space-y-4 text-gray-600 dark:text-gray-300">
       <a href="{% url 'custom_admin:custom_admin_dashboard' %}" class="hover:text-primary">Dashboard</a>
 
-      {% for app, models in grouped_models.items %}
-        <div class="mt-4">
-          <h4 class="text-xs text-gray-400 uppercase">{{ app }}</h4>
-          {% for model in models %}
-            <a href="{{ model.url }}" class="block text-sm py-1 hover:text-primary">{{ model.name }}</a>
-          {% endfor %}
-        </div>
-      {% endfor %}
+      <div class="mt-4">
+        <h4 class="text-xs text-gray-400 uppercase">Media</h4>
+        <a href="{% url 'custom_admin:media_files' %}" class="block text-sm py-1 hover:text-primary">Media Files</a>
+        <a href="{% url 'custom_admin:tags' %}" class="block text-sm py-1 hover:text-primary">Tags</a>
+        <a href="{% url 'custom_admin:categories' %}" class="block text-sm py-1 hover:text-primary">Categories</a>
+      </div>
 
       <a href="{% url 'custom_admin:settings' %}" class="hover:text-primary mt-6">Settings</a>
       <a href="{% url 'custom_admin:custom_logout' %}" class="mt-10 bg-danger hover:bg-red-700 text-white py-2 px-4 rounded text-center">Logout</a>
@@ -68,10 +66,12 @@
   <main class="flex-1 overflow-y-auto p-8 dark:bg-slate-900 dark:text-white">
     <button onclick="toggleSidebar()" class="md:hidden mb-4 text-white bg-primary px-4 py-2 rounded shadow-md">Menu</button>
 
+    {% block content %}
+    <!-- Default dashboard content -->
     <h2 class="text-3xl font-semibold mb-2">Dashboard</h2>
     <p class="text-gray-500 mb-6">Manage uploaded media files</p>
 
-    <!-- Upload File Form -->
+    <!-- Upload File -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6 dark:bg-slate-800">
       <h3 class="text-xl font-semibold mb-4">Upload File</h3>
       <form method="POST" enctype="multipart/form-data" onsubmit="return showLoading();">
@@ -114,6 +114,7 @@
         </tbody>
       </table>
     </div>
+    {% endblock %}
   </main>
 </div>
 
