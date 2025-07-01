@@ -6,16 +6,26 @@ from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+<<<<<<< HEAD
 from .models import MediaFile
 from .serializers import MediaFileSerializer
 from .utils import get_guessed_file_type
+=======
+from .models import MediaFile, Category, Tag
+from .serializers import MediaFileSerializer, CategorySerializer, TagSerializer
+from rest_framework.permissions import IsAuthenticated
+
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.all()
     serializer_class = MediaFileSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [permissions.IsAuthenticated]
+<<<<<<< HEAD
 
+=======
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['file_type', 'category', 'is_processed', 'tags']
     search_fields = ['file']
@@ -23,6 +33,7 @@ class MediaFileViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         file_obj = self.request.FILES['file']
+<<<<<<< HEAD
         guessed_type, ext = get_guessed_file_type(file_obj.name)
         selected_type = serializer.validated_data.get('file_type')
 
@@ -35,12 +46,22 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             owner=self.request.user,
             size=file_obj.size,
             extension=ext
+=======
+        instance = serializer.save(
+            owner=self.request.user,
+            size=file_obj.size,
+            extension=file_obj.name.split('.')[-1].lower()
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
         )
         try:
             from .tasks import extract_metadata
             extract_metadata.delay(instance.id)
         except Exception as e:
             print("Celery error:", e)
+<<<<<<< HEAD
+=======
+            # Fallback: run task synchronously
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
             extract_metadata(instance.id)
 
     def get_queryset(self):
@@ -49,17 +70,25 @@ class MediaFileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def export(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+<<<<<<< HEAD
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="media_files_export.csv"'
 
+=======
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="media_files_export.csv"'
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
         writer = csv.writer(response)
         writer.writerow([
             'ID', 'File Name', 'File Type', 'Size (bytes)', 'Extension',
             'Duration (s)', 'Width', 'Height', 'Page Count',
             'Category', 'Uploaded At', 'Owner', 'Processed'
         ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
         for obj in queryset:
             writer.writerow([
                 obj.id,
@@ -76,7 +105,10 @@ class MediaFileViewSet(viewsets.ModelViewSet):
                 obj.owner.username,
                 obj.is_processed
             ])
+<<<<<<< HEAD
 
+=======
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
         return response
 
     @action(detail=True, methods=['get'])
@@ -88,11 +120,33 @@ class MediaFileViewSet(viewsets.ModelViewSet):
             print("Download error:", e)
             raise Http404("File not found.")
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def public_download(request, pk):
     media = get_object_or_404(MediaFile, pk=pk, is_public=True)
     try:
         return FileResponse(media.file.open('rb'), as_attachment=True)
+<<<<<<< HEAD
     except:
         raise Http404("File not found.")
+=======
+    except Exception as e:
+        print("Public download error:", e)
+        raise Http404("File not found.")
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [IsAuthenticated]
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a

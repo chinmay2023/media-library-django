@@ -1,17 +1,30 @@
 from rest_framework import serializers
 from .models import MediaFile, Tag, Category
+<<<<<<< HEAD
 from .utils import get_guessed_file_type
+=======
+import os
+
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name']
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
 class MediaFileSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, required=False)
     category = CategorySerializer(read_only=True)
@@ -29,6 +42,7 @@ class MediaFileSerializer(serializers.ModelSerializer):
         file_type = data.get('file_type')
 
         if file and file_type:
+<<<<<<< HEAD
             guessed_type, ext = get_guessed_file_type(file.name)
 
             if not guessed_type:
@@ -39,6 +53,32 @@ class MediaFileSerializer(serializers.ModelSerializer):
             if guessed_type != file_type.lower():
                 raise serializers.ValidationError({
                     'file_type': f"File type mismatch: uploaded file has extension '.{ext}', but selected file_type is '{file_type}'"
+=======
+            ext = os.path.splitext(file.name)[1].lower().strip('.')
+            extension_map = {
+                'jpg': 'image',
+                'jpeg': 'image',
+                'png': 'image',
+                'gif': 'image',
+                'mp3': 'audio',
+                'wav': 'audio',
+                'mp4': 'video',
+                'avi': 'video',
+                'pdf': 'pdf',
+                'doc': 'doc',
+                'docx': 'doc',
+            }
+            guessed_type = extension_map.get(ext)
+
+            if not guessed_type:
+                raise serializers.ValidationError({
+                    'file': f"Unsupported file extension: .{ext}"
+                })
+
+            if guessed_type != file_type.lower().strip():
+                raise serializers.ValidationError({
+                    'file_type': f"File type mismatch: uploaded file has extension '.{ext}', but file_type is '{file_type}'"
+>>>>>>> a664c486631055869c7609f8ed58ad4b7b35d15a
                 })
 
         return data
